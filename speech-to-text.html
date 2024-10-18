@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja"> <!-- Set language to Japanese -->
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Speech Recognition</title>
+    <link rel="stylesheet" href="./speechStyle.css" />
+</head>
+<body>
+
+    <main>
+        <h3>Japanese Speech to Text</h3>
+        <button id="button">START</button>
+        <div id="result"></div>
+    </main>
+
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+            const button = document.getElementById("button");
+            const result = document.getElementById("result");
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (typeof SpeechRecognition !== "undefined") {
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'ja-JP'; // Set language to Japanese
+                recognition.continuous = true; // Continuously record results
+                recognition.interimResults = true; // Record interim results
+
+                let isRecognizing = false; // Track recognition state
+
+                const onResult = event => {
+                    result.innerHTML = ""; // Clear previous results
+                    for (const res of event.results) {
+                        const text = document.createTextNode(res[0].transcript);
+                        const p = document.createElement("p");
+                        if (res.isFinal) {
+                            p.classList.add("final");
+                        }
+                        p.appendChild(text);
+                        result.appendChild(p);
+                        
+                        // Limit the number of displayed lines
+                        const lines = document.getElementsByTagName("p").length;
+                        if (lines > 2) {
+                            document.getElementsByTagName("p")[0].remove(); // Remove the oldest line
+                        }
+                    }
+                };
+
+                recognition.addEventListener("result", onResult);
+                
+                button.addEventListener("click", () => {
+                    if (!isRecognizing) {
+                        recognition.start();
+                        button.textContent = "Listening...";
+                        isRecognizing = true; // Update recognition state
+                    } else {
+                        recognition.stop();
+                        button.textContent = "START";
+                        isRecognizing = false; // Update recognition state
+                    }
+                });
+
+                recognition.addEventListener('end', () => {
+                    isRecognizing = false; // Reset recognition state when it ends
+                    button.textContent = "START"; // Reset button text
+                });
+
+                recognition.onerror = (event) => {
+                    result.innerHTML += "Error occurred: " + event.error + "<br>"; // Display error
+                };
+            } else {
+                result.innerHTML = "Sorry, your browser does not support Speech Recognition.";
+            }
+        });
+    </script>
+</body>
+</html>
